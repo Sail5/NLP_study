@@ -1,0 +1,7 @@
+import pandas as pd
+
+file1=pd.read_csv(" パス ")
+df=pd.DataFrame(file1)
+
+team_counts=(df['カラム名'] =='ワード').sum()
+print('ワード:',team_counts)
