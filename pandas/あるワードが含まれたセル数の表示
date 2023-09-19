@@ -1,0 +1,6 @@
+import pandas as pd
+file1=pd.read_csv(" パス ")
+df=pd.DataFrame(file1)
+
+contains_set = df['Team'].str.contains('ワード1|ワード2', na=False).sum()
+print("ワード1またはワード2が含まれているセルの数:", contains_set)
