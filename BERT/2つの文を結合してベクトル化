@@ -1,0 +1,17 @@
+from sklearn.metrics.pairwise import cosine_similarity
+from transformers import BertTokenizer, BertModel
+import torch
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv(r"パス.csv")
+print(df.shape)
+df.head()
+
+columns1 = df[['columns01', 'columns02']]
+columns1['Merged_Column'] = columns1['columns01'] + ' ' + columns1['columns02']
+
+text_list = columns1['Merged_Column'].tolist()
+
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+model = BertModel.from_pretrained('bert-base-uncased')
