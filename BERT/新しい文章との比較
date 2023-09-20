@@ -1,0 +1,24 @@
+new_input_text = "新しい文章." 
+
+inputs = tokenizer(new_input_text, padding=True, truncation=True, return_tensors="pt", max_length=512)
+with torch.no_grad():
+    outputs = model(**inputs)
+new_input_vector = outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
+
+# 前にベクトル化したnpyファイルを読み込む
+npy_file_path = r'パス.npy'
+loaded_data = np.load(npy_file_path, allow_pickle=True)
+
+vectorized_texts = loaded_data  
+similarities = cosine_similarity([new_input_vector], vectorized_texts)
+similarities = similarities[0] 
+
+top_indices = similarities.argsort()[::-1][:10]
+
+result_data = []
+for i, idx in enumerate(top_indices):
+    similarity = similarities[idx]
+    text = text_list[idx]
+    result_data.append({'番号': idx + 1, '類似度': similarity, 'テキスト': text})
+
+result_df = pd.DataFrame(result_data)
