@@ -1,0 +1,15 @@
+input_file_path = 'xxx'
+output_file_path = 'ooo'
+
+with open(input_file_path, 'r', encoding='utf-8') as input_file:
+    with open(output_file_path, 'w', encoding='utf-8') as output_file:
+        text = input_file.read()  
+        paragraphs = text.split('。') 
+
+        # 改行を含む段落を作成。今回は文章同士を1行あけている。
+        formatted_paragraphs = ['\n'.join([paragraph.strip() + '。', '']) for paragraph in paragraphs if paragraph.strip()]
+
+      
+        output_file.write('\n'.join(formatted_paragraphs))
+
+print("テキスト処理完了")
