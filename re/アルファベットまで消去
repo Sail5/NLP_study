@@ -1,5 +1,0 @@
-import re
-
-def remove_non_alphabet_characters(text):
-    pattern = r"^[^a-zA-Z]+"
-    return re.sub(pattern, '', text)
