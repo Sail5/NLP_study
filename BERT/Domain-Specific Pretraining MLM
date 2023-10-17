@@ -1,0 +1,40 @@
+import pandas as pd
+from transformers import BertTokenizer, BertForMaskedLM, DataCollatorForLanguageModeling, Trainer, TrainingArguments
+
+df = pd.read_csv("ファイルパス.csv")
+
+# 今回はbert-base-uncasedを使用
+tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+
+text_data = df["カラム名"].tolist()  
+tokenized_data = tokenizer(text_data, return_tensors="pt", padding=True, truncation=True)
+
+# MLMの訓練データの作成
+data_collator = DataCollatorForLanguageModeling(
+    tokenizer=tokenizer, mlm=True, mlm_probability=0.15
+)
+
+# BERTモデルを読み込み
+model = BertForMaskedLM.from_pretrained("bert-base-uncased")
+
+#設定
+training_args = TrainingArguments(
+    output_dir="./bert_domain_pretraining",
+    overwrite_output_dir=True,
+    num_train_epochs=3,
+    per_device_train_batch_size=8,
+    save_steps=10_000,
+    save_total_limit=2,
+    remove_unused_columns=False,
+)
+
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    data_collator=data_collator,
+    train_dataset=tokenized_data["input_ids"], 
+)
+
+#実行
+trainer.train()
+trainer.save_model()
