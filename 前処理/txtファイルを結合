@@ -1,0 +1,25 @@
+import os
+
+directory_path = r'パス'
+
+# 出力ファイル名
+output_file_path = os.path.join(directory_path, '出力後のファイル名.txt')
+
+# 読み込むファイルのリスト
+input_files = ['text1.txt', 'text2.txt', 'text3.txt']
+
+# ファイルをまとめる関数
+def combine_files(input_files, output_file):
+    with open(output_file, 'w', encoding='utf-8') as output:
+        for input_file in input_files:
+            input_file_path = os.path.join(directory_path, input_file)
+            try:
+                with open(input_file_path, 'r', encoding='utf-8') as input_data:
+                    output.write(input_data.read() + '\n')
+            except FileNotFoundError:
+                print(f'Warning: {input_file} not found.')
+
+# ファイルの結合
+combine_files(input_files, output_file_path)
+
+print(f'ファイルがまとめられました: {output_file_path}')
