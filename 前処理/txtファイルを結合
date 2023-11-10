@@ -5,8 +5,13 @@ directory_path = r'パス'
 # 出力ファイル名
 output_file_path = os.path.join(directory_path, '出力後のファイル名.txt')
 
-# 読み込むファイルのリスト
+
+# 読み込むファイルのリストを示す場合
 input_files = ['text1.txt', 'text2.txt', 'text3.txt']
+
+# ディレクトリ内のすべての.txtファイルを取得の場合
+input_files = [file for file in os.listdir(directory_path) if file.endswith('.txt')]
+
 
 # ファイルをまとめる関数
 def combine_files(input_files, output_file):
