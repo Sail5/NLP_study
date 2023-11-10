@@ -1,0 +1,84 @@
+import os
+import re
+
+text_file_path = r'パス.txt'
+csv_file_path = r'パス.csv'
+
+# テキストファイルを読み取る
+with open(text_file_path, 'r', encoding='utf-8') as text_file:
+    text_data = text_file.read()
+
+# * を削除
+text_data = text_data.replace("*", "")
+
+# 文頭の空白を削除
+text_data = text_data.lstrip()
+
+# 新しいファイル名を生成
+new_file_name = os.path.splitext(os.path.basename(csv_file_path))[0] + "1.csv"
+new_csv_file_path = os.path.join(os.path.dirname(csv_file_path), new_file_name)
+
+# CSVファイルにデータを書き込む
+with open(csv_file_path, 'w', newline='', encoding='utf-8') as csv_file:
+    csv_file.write(text_data)
+
+# CSVファイルからデータを読み取る
+with open(csv_file_path, 'r', newline='', encoding='utf-8') as csv_file:
+    csv_data = csv_file.read()
+
+# (1) や (2) のようなパターンを削除
+csv_data = re.sub(r'\(\d+\)', '', csv_data)
+
+# (a) や (b) のようなパターンを削除
+csv_data = re.sub(r'\(\w\)', '', csv_data)
+
+# i)などを消去
+csv_data = re.sub(r'\b[ivxlc]+\)', '', csv_data)
+
+# 各セルの文頭の空白を削除
+csv_data = re.sub(r'(?<=[,\n])\s+', '', csv_data)
+
+# 各セルの文頭がアルファベットで始まるまで、その前の文字を削除
+csv_data = re.sub(r'(?<=[,\n])([^A-Za-z]*)([A-Za-z])', r'\2', csv_data)
+
+# 各セルの文頭が大文字で始まり、かつ1単語の文章を削除（未使用）
+#csv_data = re.sub(r'(?<=[,\n])\s*[A-Z][a-z]*\s*[^A-Za-z]*', '', csv_data)
+
+# 1行目のセルで "in"、"of"、"on"、または "and" で始まるセルを削除（未使用）
+#csv_data = re.sub(r'^.*?,\s*in\s|^.*?,\s*of\s|^.*?,\s*on\s|^.*?,\s*and\s', '', csv_data)
+
+# 1行目の各列のセルで "in"、"of"、"on"、または "and" で始まる部分とそれに続く語を削除（未使用）
+#csv_data = re.sub(r'^.*?\b(in|of|on|and)\s+', '', csv_data, flags=re.M)
+
+def remove_non_ascii(text):
+    # 非ASCII文字を削除
+    text = re.sub(r'[^\x00-\x7F]+', '', text)
+    return text
+
+# 非ASCII文字を削除
+csv_data = remove_non_ascii(csv_data)
+
+# 各行を結合し、結合した部分にコンマを挿入
+lines = csv_data.split('\n')
+new_csv_data = []
+for line in lines:
+    if line:
+        new_csv_data.append(','.join(line.split(',')))
+
+new_csv_data = '\n'.join(new_csv_data)
+
+# 新しいCSVファイルにデータを書き込む
+with open(new_csv_file_path, 'w', newline='', encoding='utf-8') as new_csv_file:
+    new_csv_file.write(new_csv_data)
+
+# 新しいテキストファイルを保存するディレクトリ
+save_directory = r'保存先のパス'
+new_text_file_path = os.path.join(save_directory, os.path.basename(new_csv_file_path).replace(".csv", "-1.txt"))
+
+# 新しいCSVファイルをテキストファイルに変換
+with open(new_csv_file_path, 'r', newline='', encoding='utf-8') as new_csv_file:
+    csv_data = new_csv_file.read()
+    with open(new_text_file_path, 'w', encoding='utf-8') as new_text_file:
+        new_text_file.write(csv_data)
+
+print(f'新しいテキストファイルが作成されました: {new_text_file_path}')
