@@ -1,0 +1,45 @@
+!pip install accelerate -U
+!pip install transformers[torch]
+!pip install ipywidgets --upgrade
+
+import pandas as pd
+from transformers import BertTokenizer, BertForMaskedLM, DataCollatorForLanguageModeling, Trainer, TrainingArguments
+
+# CSVファイルからデータを読み込む（ノートブックと同じディレクトリならファイル名だけでOK）
+df = pd.read_csv("ファイルパス.csv")
+
+# BERTのトークナイザーを初期化
+tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+
+# データの前処理
+text_data = df["text"].tolist()  # データフレームの実際のカラム名に変更
+tokenized_data = tokenizer(text_data, return_tensors="pt", padding=True, truncation=True)
+
+# MLMの訓練データの作成
+data_collator = DataCollatorForLanguageModeling(
+    tokenizer=tokenizer, mlm=True, mlm_probability=0.15
+)
+
+# BERTモデルを読み込み
+model = BertForMaskedLM.from_pretrained("bert-base-uncased")
+
+# トレーニング設定
+training_args = TrainingArguments(
+    output_dir="./bert_domain_pretraining",
+    overwrite_output_dir=True,
+    num_train_epochs=3,
+    per_device_train_batch_size=8,
+    save_steps=10_000,
+    save_total_limit=2,
+    remove_unused_columns=False,
+)
+
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    data_collator=data_collator,
+    train_dataset=tokenized_data["input_ids"],  # トークン化したデータを使用
+)
+
+trainer.train()
+trainer.save_model()
