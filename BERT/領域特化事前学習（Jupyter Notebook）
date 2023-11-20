@@ -42,4 +42,8 @@ trainer = Trainer(
 )
 
 trainer.train()
-trainer.save_model()
+
+model_save_path = "./save_base_model"  # 
+trainer.model.save_pretrained(model_save_path)
+tokenizer_save_path = "./save_base_tokenizer"  # 
+tokenizer.save_pretrained(tokenizer_save_path)
