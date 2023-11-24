@@ -94,7 +94,7 @@ for epoch in range(EPOCHS):
     avg_loss = total_loss / len(train_loader)
     print(f'Epoch {epoch + 1}, Loss: {avg_loss}')
     model_save_path = "./finetuned_NK_base_model_ver2"  # 
-    trainer.model.save_pretrained(model_save_path)
+    model.save_pretrained(model_save_path)
     tokenizer_save_path = "./finetuned_NK_base_tokenizer_ver2"  # 
     tokenizer.save_pretrained(tokenizer_save_path)
 
