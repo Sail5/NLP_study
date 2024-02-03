@@ -1,0 +1,60 @@
+import numpy as np
+import umap
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# CSVファイルからデータを読み込む
+train_df = pd.read_csv("ファイルのパス.csv")
+
+# ラベルのユニークな値を確認
+unique_labels = train_df['カラム名'].unique()
+
+# ユニークな値を表示
+print("Unique Labels:", unique_labels)
+
+# ラベル数を指定
+max_label = 7  
+train_df['カラム名'] = train_df['カラム名'].apply(lambda x: min(x, max_label))
+
+# 再度、ユニークな値を確認して修正が反映されているか確認
+unique_labels_fixed = train_df['カラム名'].unique()
+print("Unique Labels (Fixed):", unique_labels_fixed)
+
+# 分類結果（ラベル）をNumpyのnpyファイルとして保存
+label_file_path = "保存ファイルのパス.npy"
+np.save(label_file_path, train_df['Team'].values)
+
+
+
+
+# 保存されたベクトルのnpyファイルのパス
+vector_file_path = "ファイルパス.npy"
+
+# 分類結果（ラベル）が保存されたnpyファイルのパス
+label_file_path = "23行目で保存したファイル.npy"
+
+# Numpyファイルからベクトルとラベルを読み込む
+vectors = np.load(vector_file_path)
+labels = np.load(label_file_path)
+
+# ベクトルの次元削減（例：UMAP）
+umap_result = umap.UMAP(n_neighbors=5, min_dist=0.3, metric='cosine',random_state=42).fit_transform(vectors)
+
+# 各クラスごとに色を設定
+unique_labels = np.unique(labels)
+#colors = plt.cm.tab10(np.linspace(0, 1, len(unique_labels)))
+colors = ['pink', 'brown', 'green', 'olive', 'purple', 'gray', 'orange']   
+plt.figure(figsize=(18, 18))
+
+# ベクトルの可視化
+for i, label in enumerate(unique_labels):
+    indices = np.where(labels == label)[0]
+    plt.scatter(umap_result[indices, 0], umap_result[indices, 1], color=colors[i], label=f'     ')
+
+
+# メモリのフォントサイズを変更
+plt.xticks(fontsize=23)
+plt.yticks(fontsize=23)
+# 画像を保存
+plt.savefig("vector_visualization.png")
+plt.show()
