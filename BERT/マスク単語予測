@@ -1,0 +1,28 @@
+pip install transformers
+
+from transformers import BertTokenizer, BertForMaskedLM
+import torch
+
+# BERTの事前学習済みモデルとトークナイザーのロード
+tokenizer = BertTokenizer.from_pretrained("トークナイザー")
+model = BertForMaskedLM.from_pretrained("事前学習済みモデル")
+
+# 予測したい文
+text = " 1単語を[MASK] に置き換えた英文をここに記入."
+
+# トークナイザーを使って文をトークンに分割
+tokenized_text = tokenizer.tokenize(tokenizer.decode(tokenizer.encode(text)))
+mask_index = tokenized_text.index('[MASK]')
+
+# トークナイザーを使って入力データを作成
+indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized_text)
+tokens_tensor = torch.tensor([indexed_tokens])
+
+# モデルに入力データを渡して予測
+with torch.no_grad():
+    outputs = model(tokens_tensor)
+    predictions = outputs.logits[0, mask_index].topk(30).indices.tolist()
+
+# 予測結果を表示
+predicted_words = tokenizer.convert_ids_to_tokens(predictions)
+print("Predicted words:", predicted_words)
