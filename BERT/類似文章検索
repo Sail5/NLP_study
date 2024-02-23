@@ -1,0 +1,83 @@
+from sklearn.metrics.pairwise import cosine_similarity
+from transformers import BertTokenizer, BertModel
+import torch 
+import pandas as pd
+import numpy as np
+
+model_name = '使用するBERTモデル' #変更箇所
+
+# データの読み込み
+df = pd.read_csv("使用データ.csv") #変更箇所
+print(df.shape)
+df.head()
+
+# 列を取り出して新しいデータフレームを作成
+columns1 = df['カラム1'] #変更箇所
+columns2 = df['カラム2'] #変更箇所
+columns3 = df['カラム3'] #変更箇所
+columns4 = df['カラム4'] #変更箇所
+
+# テキストデータをリストに変換
+1_list = columns1.tolist() 
+2_list = columns2.tolist()
+3_list = columns3.tolist()
+4_list = columns4.tolist()
+
+# ベクトル化に使用するモデルとトークナイザの読み込み
+tokenizer = BertTokenizer.from_pretrained(model_name)
+model = BertModel.from_pretrained(model_name)
+
+# 新しい入力文をベクトル化
+new_input_text = "検索したい文章" #新しい入力文を設定
+
+inputs = tokenizer(new_input_text, padding=True, truncation=True, return_tensors="pt", max_length=512)
+with torch.no_grad():
+    outputs = model(**inputs)
+new_input_vector = outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
+
+# npyファイルを読み込む(ベクトル化で作成したファイル)
+npy_file_path = 'ベクトル化で作成したファイル.npy'
+loaded_data = np.load(npy_file_path, allow_pickle=True)
+
+# コサイン類似度を計算して類似度の高いものを表示
+vectorized_texts = loaded_data  
+similarities = cosine_similarity([new_input_vector], vectorized_texts)
+similarities = similarities[0]  # 類似度のリスト
+
+# 類似度が高い上位15のインデックスを取得
+top_indices = similarities.argsort()[::-1][:15]
+
+# 類似度、テキスト、インデックス番号を含むデータフレームを作成
+result_data = []
+for i, idx in enumerate(top_indices):
+    similarity = similarities[idx]
+    output1 = 1_list[idx]
+    output2 = 2_list[idx]
+    output3 = 3_list[idx]
+    output4 = 4_list[idx]
+    result_data.append({'対応番号': idx , '類似度': similarity, '出力データ1': output1, '出力データ2': output2, '出力データ3': output3, '出力データ4': output4})
+
+# 入力文をデータフレームに格納
+input_df = pd.DataFrame({'入力文': [new_input_text]})
+
+result_df = pd.DataFrame(result_data)
+
+# 新しいエクセルファイルを作成してデータを書き込む
+excel_file_path = '出力するエクセルファイル.xlsx'  # 出力するエクセルファイルのパス・変更箇所
+with pd.ExcelWriter(excel_file_path, engine='xlsxwriter') as writer:
+    # 入力文を書き込む
+    input_df.to_excel(writer, sheet_name='Sheet1', startrow=0, index=False)
+    
+    # インデックス番号、類似度、テキストを書き込む
+    result_df.to_excel(writer, sheet_name='Sheet1', startrow=2, index=False)
+    
+    # シートの名前を変更
+    worksheet = writer.sheets['Sheet1']
+    worksheet.write(2, 0, '対応番号')
+    worksheet.write(2, 1, '類似度')
+    worksheet.write(2, 2, '出力データ1')
+    worksheet.write(2, 3, '出力データ2')
+    worksheet.write(2, 4, '出力データ3')
+    worksheet.write(2, 5, '出力データ4')
+
+print(f"結果を {excel_file_path} に書き込みました。")
