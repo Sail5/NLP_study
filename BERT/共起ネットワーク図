@@ -1,0 +1,85 @@
+pip install transformers
+pip install networkx
+pip install matplotlib
+
+import torch
+from transformers import BertModel, BertTokenizer
+import networkx as nx
+import matplotlib.pyplot as plt
+from sklearn.metrics.pairwise import cosine_similarity
+from nltk import pos_tag
+from nltk.tokenize import word_tokenize
+
+def get_bert_embeddings(sentence, model, tokenizer):
+    tokens = tokenizer(sentence, return_tensors='pt')
+    with torch.no_grad():
+        outputs = model(**tokens)
+    return outputs.last_hidden_state
+
+def extract_nouns_from_sentence(sentence):
+    # 名詞の抽出処理を追加する（NLTKのPOSタガーを使用）
+    tagged_words = pos_tag(word_tokenize(sentence))
+    nouns = [word for word, pos in tagged_words if pos.startswith('NN')]
+    return nouns
+
+def calculate_similarity(embedding1, embedding2):
+    # コサイン類似度の計算
+    similarity = cosine_similarity(embedding1.reshape(1, -1), embedding2.reshape(1, -1))
+    return similarity[0, 0]
+def visualize_noun_connections(sentence, model, tokenizer, threshold=0.6):
+    nouns = extract_nouns_from_sentence(sentence)
+    embeddings = get_bert_embeddings(sentence, model, tokenizer)
+
+    # ネットワークの作成
+    G = nx.Graph()
+
+    # 名詞をノードとして追加
+    for noun in nouns:
+        G.add_node(noun)
+
+    # 名詞同士の関係をエッジとして追加
+    for i in range(len(nouns)):
+        for j in range(i+1, len(nouns)):
+            # 類似度の計算
+            similarity_score = calculate_similarity(embeddings[0][i], embeddings[0][j])
+            if similarity_score > threshold:
+                G.add_edge(nouns[i], nouns[j])
+
+    # ネットワークの可視化
+    pos = nx.spring_layout(G, k=0.8)  # kパラメータでノード間の距離を調整
+
+    # ノードのサイズを設定
+    node_size = 200
+
+    # エッジの太さを設定
+    edge_width = 0.5
+
+    # ノードの色を指定
+    node_color = 'lightblue'
+
+    # エッジの色を指定
+    edge_color = 'gray'
+    plt.figure(figsize=(12, 12)) 
+    # ネットワークの描画
+    nx.draw_networkx_nodes(G, pos, node_size=node_size, node_color=node_color)
+    nx.draw_networkx_edges(G, pos, width=edge_width, edge_color=edge_color)
+    nx.draw_networkx_labels(G, pos, font_size=10, font_color='black')
+
+    
+    
+    # 描画を表示
+    plt.show()
+    # ノード数とエッジ数を表示
+    print("ノード数:", nx.number_of_nodes(G))
+    print("エッジ数:", nx.number_of_edges(G))
+# BERTモデルとトークナイザーのロード
+model_name = 'bert-base-uncased'
+model = BertModel.from_pretrained(model_name)
+tokenizer = BertTokenizer.from_pretrained(model_name)
+
+# 対象の文
+sentence = "文章を入力する"
+
+
+# 可視化
+visualize_noun_connections(sentence, model, tokenizer)
